@@ -6,14 +6,8 @@ const bodyParser = require('koa-bodyparser')
 
 const app = new Koa()
 const router = new Router()
-
-function getData () {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      resolve({ id: 1, name: 'Lorem ipsum' })
-    }, 2000)
-  })
-}
+const db = require('./adapters/db')
+const workouts = require('./resources/workouts/routes.js')
 
 // configuration
 nconf
@@ -42,6 +36,7 @@ app.use(async (ctx, next) => {
   console.log(`${ctx.method} ${ctx.url} - ${ms} ms`)
 })
 
+// sentry.io error reporter
 app.on('error', (err) => {
   Raven.captureException(err, (err, eventId) => {
     console.log(`Reported error ${eventId}`)
@@ -49,12 +44,11 @@ app.on('error', (err) => {
 })
 
 router.get('/', (ctx, next) => {
-  ctx.body = 'Hello Work'
+  ctx.body = 'If it ends with 200 it is OK!'
 })
 
-router.post('/', async (ctx, next) => {
-  ctx.body = await getData()
-})
+router.get('/workouts', workouts.getList)
+router.get('/workouts/:id', workouts.getOne)
 
 app
   .use(router.routes())
