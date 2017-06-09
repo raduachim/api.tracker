@@ -8,9 +8,13 @@ async function getOne (ctx, next) {
   ctx.body = await service.getOne(ctx.request.params.id)
 }
 
+async function create (ctx, next) {
+  ctx.body = await service.create(ctx.request.body)
+}
+
 module.exports = {
   getOne,
-  getList
-  // create,
+  getList,
+  create
   // del
 }

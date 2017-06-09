@@ -3,6 +3,8 @@ const Raven = require('raven')
 const nconf = require('nconf')
 const Router = require('koa-router')
 const bodyParser = require('koa-bodyparser')
+const cors = require('koa-cors')
+const bugsnag = require('bugsnag')
 
 const app = new Koa()
 const router = new Router()
@@ -10,6 +12,9 @@ const db = require('./adapters/db')
 const workouts = require('./resources/workouts/routes.js')
 
 // configuration
+app.use(bodyParser())
+app.use(cors())
+
 nconf
   .env()
   .file({ file: './config.json' })
@@ -18,7 +23,7 @@ Raven
   .config(nconf.get('ravenKey'))
   .install()
 
-app.use(bodyParser())
+bugsnag.register(nconf.get('bugsnagKey'))
 
 // x-response-time header
 app.use(async (ctx, next) => {
@@ -37,11 +42,13 @@ app.use(async (ctx, next) => {
 })
 
 // sentry.io error reporter
-app.on('error', (err) => {
-  Raven.captureException(err, (err, eventId) => {
-    console.log(`Reported error ${eventId}`)
-  })
-})
+// app.on('error', (err) => {
+//   Raven.captureException(err, (err, eventId) => {
+//     console.log(`Reported error ${eventId}`)
+//   })
+// })
+
+app.on('error',bugsnag.koaHandler)
 
 router.get('/', (ctx, next) => {
   ctx.body = 'If it ends with 200 it is OK!'
@@ -49,6 +56,7 @@ router.get('/', (ctx, next) => {
 
 router.get('/workouts', workouts.getList)
 router.get('/workouts/:id', workouts.getOne)
+router.post('/workouts', workouts.create)
 
 app
   .use(router.routes())
