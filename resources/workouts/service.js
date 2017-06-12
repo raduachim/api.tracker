@@ -7,7 +7,7 @@ async function getList () {
 async function create ({ name }) {
   const result = await db
     .table('workouts')
-    .insert({ name, id: "c21b2aeb-922e-4631-ba7a-b6eb0666660e" })
+    .insert({ name })
   
   if (!result.generated_keys) {
     throw new Error(result.first_error)
